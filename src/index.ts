@@ -3,7 +3,7 @@ import "dotenv/config";
 import { MongoClient } from "mongodb";
 import { DbProvider } from "./database/connection";
 import { ModelProvider } from "./database/model/model";
-import { cursor } from "./database/model/op/find";
+import { watchStream } from "./database/model/watch/watch";
 
 if (!process.env.MONGO_URL) {
   throw new Error("MONGO_URL is required");
@@ -18,7 +18,7 @@ const ModelLive = Effect.provideService(
   ModelProvider.of({ db: "prova", collection: "leads" })
 );
 
-const program = cursor({}).pipe(
+const program = watchStream.pipe(
   DbLive,
   ModelLive,
   Effect.tap((docs) => {
