@@ -7,15 +7,14 @@ export class MongoWatchError extends Error {
 }
 
 export const watchStream = GetModel.pipe(
-  Effect.flatMap((collection) =>
+  Stream.flatMap((collection) =>
     Stream.fromAsyncIterable(
       collection.watch(),
       (e) => new MongoWatchError(getErrorMessage(e))
     ).pipe(
       Stream.tap((change) => {
         return Effect.log(change);
-      }),
-      Stream.runCollect
+      })
     )
   )
 );

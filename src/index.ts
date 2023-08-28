@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Stream } from "effect";
 import "dotenv/config";
 import { MongoClient } from "mongodb";
 import { DbProvider } from "./database/connection";
@@ -19,6 +19,7 @@ const ModelLive = Effect.provideService(
 );
 
 const program = watchStream.pipe(
+  Stream.runCollect,
   DbLive,
   ModelLive,
   Effect.tap((docs) => {
