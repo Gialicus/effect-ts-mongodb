@@ -51,3 +51,22 @@ export const EndSession = StartSession.pipe(
     })
   )
 );
+export const StartTransaction = StartSession.pipe(
+  Effect.map((session) => session.startTransaction())
+);
+export const CommitTransaction = StartSession.pipe(
+  Effect.flatMap((session) =>
+    Effect.tryPromise({
+      try: () => session.commitTransaction(),
+      catch: (e) => new DbConnectionError(e),
+    })
+  )
+);
+export const AbortTransaction = StartSession.pipe(
+  Effect.flatMap((session) =>
+    Effect.tryPromise({
+      try: () => session.abortTransaction(),
+      catch: (e) => new DbConnectionError(e),
+    })
+  )
+);
