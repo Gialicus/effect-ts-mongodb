@@ -1,4 +1,4 @@
-import { Document, Filter } from "mongodb";
+import { Document, Filter, FindOptions } from "mongodb";
 import { GetModel } from "../model";
 import { Effect } from "effect";
 import { CloseConnection, DbConnectionError } from "../../connection";
@@ -11,11 +11,11 @@ export class NotFoundError extends Error {
   }
 }
 
-export const findOne = (filter: Filter<Document>) =>
+export const findOne = (filter: Filter<Document>, options?: FindOptions) =>
   GetModel.pipe(
     Effect.flatMap((col) =>
       Effect.tryPromise({
-        try: () => col.findOne(filter),
+        try: () => col.findOne(filter, options),
         catch: (e) => new DbConnectionError(e),
       })
     ),

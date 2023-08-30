@@ -1,4 +1,4 @@
-import { Document, Filter, WithId } from "mongodb";
+import { Document, Filter, FindOptions, WithId } from "mongodb";
 import { GetModel } from "../model";
 import { Chunk, Effect as E, Stream } from "effect";
 import { getErrorMessage } from "../../../utils";
@@ -8,11 +8,14 @@ export class MongoFindStreamError extends Error {
   _tag = "MongoFindStreamError" as const;
 }
 
-export const find = (filter: Filter<Document>) =>
+export const find = (
+  filter: Filter<Document>,
+  options?: FindOptions<Document>
+) =>
   GetModel.pipe(
     E.flatMap((collection) =>
       E.gen(function* ($) {
-        const cursor = collection.find(filter);
+        const cursor = collection.find(filter, options);
         let chunck = Chunk.empty<WithId<Document>>();
         while (yield* $(E.tryPromise(() => cursor.hasNext()))) {
           const next = yield* $(E.tryPromise(() => cursor.next()));

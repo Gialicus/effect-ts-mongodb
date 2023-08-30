@@ -29,11 +29,25 @@ export const GetConnection = DbProvider.pipe(
 );
 
 export const CloseConnection = DbProvider.pipe(
-  Effect.flatMap((provider) =>
+  Effect.tap((provider) =>
     Effect.tryPromise({
       try: () => provider.client.close(),
       catch: (e) => new DbConnectionError(e),
     })
   ),
   Effect.tap(() => Effect.log("CloseConnection"))
+);
+
+export const StartSession = GetConnection.pipe(
+  Effect.tap(() => Effect.log("Start Session")),
+  Effect.map((client) => client.startSession())
+);
+export const EndSession = StartSession.pipe(
+  Effect.tap(() => Effect.log("End Session")),
+  Effect.flatMap((session) =>
+    Effect.tryPromise({
+      try: () => session.endSession(),
+      catch: (e) => new DbConnectionError(getErrorMessage(e)),
+    })
+  )
 );
