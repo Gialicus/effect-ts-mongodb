@@ -3,8 +3,8 @@ import { GetModel } from "../model";
 import { Filter, Document } from "mongodb";
 import { getErrorMessage } from "../../../utils";
 
-export class MongoUpdateError extends Error {
-  _tag = "MongoUpdateError";
+export class MongoDeleteError extends Error {
+  _tag = "MongoDeleteError";
 }
 
 export const deleteOne = (filter: Filter<Document>) =>
@@ -12,7 +12,7 @@ export const deleteOne = (filter: Filter<Document>) =>
     Effect.flatMap((collection) =>
       Effect.tryPromise({
         try: () => collection.deleteOne(filter),
-        catch: (e) => new MongoUpdateError(getErrorMessage(e)),
+        catch: (e) => new MongoDeleteError(getErrorMessage(e)),
       })
     )
   );
