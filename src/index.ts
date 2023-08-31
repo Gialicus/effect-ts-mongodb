@@ -1,10 +1,9 @@
-import { Effect, Schedule, Stream } from "effect";
+import { Effect, Schedule } from "effect";
 import "dotenv/config";
 import { MongoClient } from "mongodb";
 import { DbProvider } from "./database/connection";
 import { ModelProvider } from "./database/model/model";
-import { SyncCollection, SyncItem } from "./database/model/watch/sync/sync";
-import { getOne } from "./database/model/op/request/getOne";
+import { getMany } from "./database/model/op/request/getMany";
 
 if (!process.env.MONGO_URL) {
   throw new Error("MONGO_URL is required");
@@ -35,15 +34,10 @@ const ModelLive = Effect.provideService(
 Effect.runPromise(
   Effect.all(
     [
-      getOne("64e7244662d0978218af156f").pipe(
+      getMany(["64e7244662d0978218af156f", "64e790bbc761e132b013ad42"]).pipe(
         DbLive,
         ModelLive,
         Effect.repeat(Schedule.fixed("2 seconds"))
-      ),
-      getOne("64e790bbc761e132b013ad42").pipe(
-        DbLive,
-        ModelLive,
-        Effect.repeat(Schedule.fixed("3 seconds"))
       ),
     ],
     { concurrency: "unbounded" }

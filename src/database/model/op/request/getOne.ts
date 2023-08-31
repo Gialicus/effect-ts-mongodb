@@ -26,7 +26,7 @@ export const GetOneResolver = RequestResolver.fromFunctionEffect(
           Effect.tap(() => Effect.log(`Execute find for id: ${req.id}`))
         )
       : Effect.fail(
-          new ObjectIdParseError("PARSE ObjectID fail for value: " + req.id)
+          new ObjectIdParseError("Parse ObjectID fail for value: " + req.id)
         )
 ).pipe(RequestResolver.contextFromServices(ModelProvider, DbProvider));
 
