@@ -21,6 +21,5 @@ export const findOne = (filter: Filter<Document>, options?: FindOptions) =>
     ),
     Effect.flatMap((value) =>
       value ? Effect.succeedSome(value) : Effect.succeedNone
-    ),
-    Effect.tap(() => CloseConnection)
+    )
   );

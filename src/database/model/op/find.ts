@@ -35,6 +35,5 @@ export const cursor = (filter: Filter<Document>) =>
         stream,
         (e) => new MongoFindStreamError(getErrorMessage(e))
       ).pipe(Stream.runCollect);
-    }),
-    E.tap(() => CloseConnection)
+    })
   );
