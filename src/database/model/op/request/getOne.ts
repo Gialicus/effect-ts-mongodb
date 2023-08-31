@@ -23,7 +23,7 @@ export const GetOneResolver = RequestResolver.fromFunctionEffect(
   (req: GetOne) =>
     ObjectId.isValid(req.id)
       ? findOne({ _id: new ObjectId(req.id) }).pipe(
-          Effect.tap(() => Effect.log(`Execute find for id: ${req.id}`))
+          Effect.tap(() => Effect.log(`Execute findOne for id: ${req.id}`))
         )
       : Effect.fail(
           new ObjectIdParseError("Parse ObjectID fail for value: " + req.id)

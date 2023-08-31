@@ -23,7 +23,11 @@ export const GetManyResolver = RequestResolver.fromFunctionEffect(
       _id: {
         $in: req.ids.filter(ObjectId.isValid).map((v) => new ObjectId(v)),
       },
-    })
+    }).pipe(
+      Effect.tap(() =>
+        Effect.log(`Execute find for ids: ${req.ids.join(", ")}`)
+      )
+    )
 ).pipe(RequestResolver.contextFromServices(ModelProvider, DbProvider));
 
 export const getMany = (ids: string[]) =>
