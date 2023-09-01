@@ -1,7 +1,6 @@
 import { Context, Effect, Stream } from "effect";
 import { GetConnection } from "../../../connection";
 import { getErrorMessage } from "../../../../utils";
-import { MongoInsertError } from "../../op/insertOne";
 import {
   MongoClient,
   Document,
@@ -9,7 +8,6 @@ import {
   ChangeStreamUpdateDocument,
   ChangeStreamDeleteDocument,
 } from "mongodb";
-import { MongoDeleteError } from "../../op/deleteOne";
 
 export interface SyncItem {
   db: string;
@@ -71,7 +69,7 @@ function handleUpdate(
         }
       ),
     catch(error) {
-      return new MongoDeleteError(getErrorMessage(error));
+      return new MongoSyncError(getErrorMessage(error));
     },
   });
   return effect;
@@ -87,7 +85,7 @@ function handleInsert(
   const effect = Effect.tryPromise({
     try: () => replica.insertOne(change.fullDocument),
     catch(error) {
-      return new MongoInsertError(getErrorMessage(error));
+      return new MongoSyncError(getErrorMessage(error));
     },
   });
   return effect;
@@ -103,7 +101,7 @@ function handleDelete(
   const effect = Effect.tryPromise({
     try: () => replica.deleteOne(change.documentKey._id),
     catch(error) {
-      return new MongoDeleteError(getErrorMessage(error));
+      return new MongoSyncError(getErrorMessage(error));
     },
   });
   return effect;
