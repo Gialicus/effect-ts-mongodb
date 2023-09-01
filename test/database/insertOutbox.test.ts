@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  DbTransactionError,
-  insertOutbox,
-} from "../../src/database/model/outbox/insertOutbox";
+import { insertOutbox } from "../../src/database/model/outbox/insertOutbox";
 import { DbLiveTest, ModelLiveTest } from "../fixture/provider";
 import { Effect } from "effect";
 import { ObjectId } from "bson";
@@ -19,10 +16,7 @@ describe("outbox", () => {
     }
   });
   it("should throw error", async () => {
-    const program = insertOutbox({ _id: new ObjectId() }).pipe(
-      DbLiveTest,
-      ModelLiveTest
-    );
+    const program = insertOutbox({}).pipe(DbLiveTest, ModelLiveTest);
     const result = await Effect.runPromiseExit(program);
     expect(result._tag).toBe("Failure");
   });
