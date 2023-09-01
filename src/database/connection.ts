@@ -37,36 +37,3 @@ export const CloseConnection = DbProvider.pipe(
   ),
   Effect.tap(() => Effect.log("CloseConnection"))
 );
-
-export const StartSession = GetConnection.pipe(
-  Effect.tap(() => Effect.log("Start Session")),
-  Effect.map((client) => client.startSession())
-);
-export const EndSession = StartSession.pipe(
-  Effect.tap(() => Effect.log("End Session")),
-  Effect.flatMap((session) =>
-    Effect.tryPromise({
-      try: () => session.endSession(),
-      catch: (e) => new DbConnectionError(getErrorMessage(e)),
-    })
-  )
-);
-export const StartTransaction = StartSession.pipe(
-  Effect.map((session) => session.startTransaction())
-);
-export const CommitTransaction = StartSession.pipe(
-  Effect.flatMap((session) =>
-    Effect.tryPromise({
-      try: () => session.commitTransaction(),
-      catch: (e) => new DbConnectionError(e),
-    })
-  )
-);
-export const AbortTransaction = StartSession.pipe(
-  Effect.flatMap((session) =>
-    Effect.tryPromise({
-      try: () => session.abortTransaction(),
-      catch: (e) => new DbConnectionError(e),
-    })
-  )
-);

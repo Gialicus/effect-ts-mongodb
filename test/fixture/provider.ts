@@ -6,9 +6,7 @@ import { ModelProvider } from "../../src/database/model/model";
 export const DbLiveTest = Effect.provideService(
   DbProvider,
   DbProvider.of({
-    client: new MongoClient(
-      "mongodb+srv://gialicolettagc:94IBOlnI8oknWyzQ@cluster0.1ebsxhj.mongodb.net/?retryWrites=true&w=majority"
-    ),
+    client: new MongoClient(""),
   })
 );
 export const ModelLiveTest = Effect.provideService(
