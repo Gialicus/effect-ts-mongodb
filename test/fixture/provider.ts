@@ -6,7 +6,9 @@ import { ModelProvider } from "../../src/database/model/model";
 export const DbLiveTest = Effect.provideService(
   DbProvider,
   DbProvider.of({
-    client: new MongoClient(""),
+    client: new MongoClient(
+      process.env.MONGO_URL || "mongodb://localhost:27017"
+    ),
   })
 );
 export const ModelLiveTest = Effect.provideService(
