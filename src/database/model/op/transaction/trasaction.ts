@@ -6,6 +6,7 @@ import { getErrorMessage } from "../../../../utils";
 export class TransactionError extends Error {
   _tag = "TransactionError";
 }
+const catchError = (e: unknown) => new TransactionError(getErrorMessage(e));
 
 export const trasaction = (operations: DbOperation[]) =>
   Effect.gen(function* ($) {
@@ -22,13 +23,13 @@ export const trasaction = (operations: DbOperation[]) =>
           yield* $(
             Effect.tryPromise({
               try: () => session.abortTransaction(),
-              catch: (e) => new TransactionError(getErrorMessage(e)),
+              catch: catchError,
             })
           );
           yield* $(
             Effect.tryPromise({
               try: () => session.endSession(),
-              catch: (e) => new TransactionError(getErrorMessage(e)),
+              catch: catchError,
             })
           );
         })
@@ -37,7 +38,15 @@ export const trasaction = (operations: DbOperation[]) =>
     return session;
   }).pipe(
     Effect.tap((session) =>
-      Effect.tryPromise(() => session.commitTransaction())
+      Effect.tryPromise({
+        try: () => session.commitTransaction(),
+        catch: catchError,
+      })
     ),
-    Effect.tap((session) => Effect.tryPromise(() => session.endSession()))
+    Effect.tap((session) =>
+      Effect.tryPromise({
+        try: () => session.endSession(),
+        catch: catchError,
+      })
+    )
   );

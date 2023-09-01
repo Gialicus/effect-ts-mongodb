@@ -12,8 +12,9 @@ describe("trasaction", () => {
   it("should throw error", async () => {
     const program = trasaction([
       insertOne({ name: "marioX", age: 30 }),
-      Effect.fail(new MongoInsertError("Batman")),
       insertOne({ name: "luigiX", age: 30 }),
+      insertOne({ name: "luigiSecondoX", age: 30 }),
+      Effect.fail(new MongoInsertError("Batman")),
     ]);
     const result = await Effect.runPromiseExit(
       program.pipe(DbLiveTest, ModelLiveTest)
