@@ -4,7 +4,7 @@ import { GetConnection } from "../../connection";
 import { ClientSession, Document, ObjectId, OptionalId } from "mongodb";
 import { getErrorMessage } from "../../../utils";
 
-export class DbTransactionError extends Error {
+export class OutboxError extends Error {
   _tag = "DbTransactionError";
   constructor(readonly session: ClientSession, message: string | undefined) {
     super(message);
@@ -19,7 +19,7 @@ export const insertOutbox = (data: OptionalId<Document>, payload = data) =>
     const session = client.startSession();
     yield* $(
       Object.keys(data).length === 0 && data.constructor === Object
-        ? Effect.fail(new DbTransactionError(session, "data cant be empty"))
+        ? Effect.fail(new OutboxError(session, "data cant be empty"))
         : Effect.unit
     );
     session.startTransaction();
@@ -30,7 +30,7 @@ export const insertOutbox = (data: OptionalId<Document>, payload = data) =>
     const resultMain = yield* $(
       Effect.tryPromise({
         try: () => main.insertOne(data, { session }),
-        catch: (e) => new DbTransactionError(session, getErrorMessage(e)),
+        catch: (e) => new OutboxError(session, getErrorMessage(e)),
       })
     );
     const resultOutbox = yield* $(
@@ -40,19 +40,19 @@ export const insertOutbox = (data: OptionalId<Document>, payload = data) =>
             { data: payload, processed: false, createdAt: new Date() },
             { session }
           ),
-        catch: (e) => new DbTransactionError(session, getErrorMessage(e)),
+        catch: (e) => new OutboxError(session, getErrorMessage(e)),
       })
     );
     yield* $(
       Effect.tryPromise({
         try: () => session.commitTransaction(),
-        catch: (e) => new DbTransactionError(session, getErrorMessage(e)),
+        catch: (e) => new OutboxError(session, getErrorMessage(e)),
       })
     );
     yield* $(
       Effect.tryPromise({
         try: () => session.endSession(),
-        catch: (e) => new DbTransactionError(session, getErrorMessage(e)),
+        catch: (e) => new OutboxError(session, getErrorMessage(e)),
       })
     );
     return Chunk.fromIterable([resultMain.insertedId, resultOutbox.insertedId]);
@@ -61,14 +61,14 @@ export const insertOutbox = (data: OptionalId<Document>, payload = data) =>
       Effect.tryPromise({
         try: () => e.session.abortTransaction(),
         catch(error) {
-          return new DbTransactionError(e.session, getErrorMessage(error));
+          return new OutboxError(e.session, getErrorMessage(error));
         },
       }).pipe(
         Effect.tap(() =>
           Effect.tryPromise({
             try: () => e.session.endSession(),
             catch(error) {
-              return new DbTransactionError(e.session, getErrorMessage(error));
+              return new OutboxError(e.session, getErrorMessage(error));
             },
           })
         ),

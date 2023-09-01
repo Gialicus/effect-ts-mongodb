@@ -1,5 +1,5 @@
 import { Context, Effect } from "effect";
-import { MongoClient } from "mongodb";
+import { ClientSession, MongoClient } from "mongodb";
 import { getErrorMessage } from "../utils";
 
 export interface DbProvider {
@@ -37,3 +37,9 @@ export const CloseConnection = DbProvider.pipe(
   ),
   Effect.tap(() => Effect.log("CloseConnection"))
 );
+
+export interface SessionProvider {
+  readonly session: ClientSession;
+}
+
+export const SessionProvider = Context.Tag<SessionProvider>();

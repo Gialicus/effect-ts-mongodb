@@ -5,10 +5,8 @@ import { describe } from "node:test";
 import { DbLiveTest, ModelLiveTest } from "../fixture/provider";
 import { CloseConnection } from "../../src/database/connection";
 
-describe("findOne", () => {
-  const program = Effect.runPromise(
-    find({ name: "gialicus" }).pipe(DbLiveTest, ModelLiveTest)
-  );
+describe("find", () => {
+  const program = Effect.runPromise(find({}).pipe(DbLiveTest, ModelLiveTest));
   it("should return chunk", async () => {
     const result = await program;
     expect(Chunk.isChunk(result)).toBe(true);

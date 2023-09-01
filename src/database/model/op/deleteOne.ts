@@ -1,18 +1,27 @@
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { GetModel } from "../model";
 import { Filter, Document, DeleteOptions } from "mongodb";
 import { getErrorMessage } from "../../../utils";
+import { SessionProvider } from "../../connection";
 
 export class MongoDeleteError extends Error {
   _tag = "MongoDeleteError";
 }
 
 export const deleteOne = (filter: Filter<Document>, options?: DeleteOptions) =>
-  GetModel.pipe(
-    Effect.flatMap((collection) =>
+  Effect.gen(function* ($) {
+    const session = yield* $(Effect.serviceOption(SessionProvider));
+    const collection = yield* $(GetModel);
+    return yield* $(
       Effect.tryPromise({
-        try: () => collection.deleteOne(filter, options),
+        try: () =>
+          collection.deleteOne(
+            filter,
+            Option.isSome(session)
+              ? { session: session.value.session, ...options }
+              : options
+          ),
         catch: (e) => new MongoDeleteError(getErrorMessage(e)),
       })
-    )
-  );
+    );
+  });
