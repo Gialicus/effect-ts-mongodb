@@ -21,8 +21,9 @@ export const SyncItemLiveTest = Effect.provideService(
   SyncItem.of({
     db: "prova",
     sync: {
-      from: "leads",
-      to: ["opportunities", "jokes"],
+      current: "opportunities",
+      path: "lead",
+      external: "leads",
     },
     fields: ["name"],
   })

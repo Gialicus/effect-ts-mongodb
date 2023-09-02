@@ -1,19 +1,13 @@
 import { Context, Effect, Stream } from "effect";
 import { GetConnection } from "../../../connection";
 import { getErrorMessage } from "../../../../utils";
-import {
-  MongoClient,
-  Document,
-  ChangeStreamInsertDocument,
-  ChangeStreamUpdateDocument,
-  ChangeStreamDeleteDocument,
-} from "mongodb";
 
 export interface SyncItem {
   db: string;
   sync: {
-    from: string;
-    to: Array<string>;
+    current: string;
+    path: string;
+    external: string;
   };
   fields: string[];
 }
@@ -24,85 +18,120 @@ export class MongoSyncError extends Error {
   _tag = "MongoSyncError";
 }
 
-export const SyncCollection = Effect.all([GetConnection, SyncItem]).pipe(
-  Effect.flatMap(([client, syncItem]) =>
+const SyncCurrentCollection = Effect.gen(function* ($) {
+  const [client, syncItem] = yield* $(Effect.all([GetConnection, SyncItem]));
+  const current = client.db(syncItem.db).collection(syncItem.sync.current);
+  const external = client.db(syncItem.db).collection(syncItem.sync.external);
+  yield* $(
     Stream.fromAsyncIterable(
-      client.db(syncItem.db).collection(syncItem.sync.from).watch(),
+      current.watch(),
       (e) => new MongoSyncError(getErrorMessage(e))
-    ).pipe(
-      Stream.flatMap((change) => {
-        const effects = [];
-        for (const name of syncItem.sync.to) {
-          if (change.operationType === "insert") {
-            const effect = handleInsert(client, syncItem, name, change);
-            effects.push(effect);
-          } else if (change.operationType === "update") {
-            const effect = handleUpdate(client, syncItem, name, change);
-            effects.push(effect);
-          } else if (change.operationType === "delete") {
-            const effect = handleDelete(client, syncItem, name, change);
-            effects.push(effect);
+    ),
+    Stream.flatMap((change) =>
+      Effect.gen(function* () {
+        if (change.operationType === "insert") {
+          const externalId = change.fullDocument[syncItem.sync.path];
+          yield* $(
+            Effect.log(
+              `${syncItem.sync.current} was created set item in sync with id: ${externalId}`
+            )
+          );
+          const externalItem = yield* $(
+            Effect.tryPromise(() => external.findOne({ _id: externalId }))
+          );
+          yield* $(
+            Effect.tryPromise(() =>
+              current.updateOne(
+                { _id: change.documentKey._id },
+                {
+                  $set: { ["sync." + syncItem.sync.path]: externalItem },
+                }
+              )
+            )
+          );
+          return yield* $(Effect.unit);
+        } else if (change.operationType === "update") {
+          if (
+            change.updateDescription.updatedFields &&
+            Object.keys(change.updateDescription.updatedFields).includes(
+              syncItem.sync.path
+            )
+          ) {
+            const externalId =
+              change.updateDescription.updatedFields[syncItem.sync.path];
+            yield* $(
+              Effect.log(
+                `${syncItem.sync.current} item in sync was changed set new with id: ${externalId}`
+              )
+            );
+            const externalItem = yield* $(
+              Effect.tryPromise(() => external.findOne({ _id: externalId }))
+            );
+            yield* $(
+              Effect.tryPromise(() =>
+                current.updateOne(
+                  { _id: change.documentKey._id },
+                  {
+                    $set: { ["sync." + syncItem.sync.path]: externalItem },
+                  }
+                )
+              )
+            );
+            return yield* $(Effect.unit);
           }
+        } else {
+          return yield* $(Effect.unit);
         }
-        return Effect.all(effects).pipe(Stream.fromEffect);
-      }),
-      Stream.tap((result) => Effect.log(result)),
-      Stream.runDrain
-    )
-  )
+      }).pipe(Stream.fromEffect)
+    ),
+    Stream.runDrain
+  );
+});
+const SyncExternalCollection = Effect.gen(function* ($) {
+  const [client, syncItem] = yield* $(Effect.all([GetConnection, SyncItem]));
+  const current = client.db(syncItem.db).collection(syncItem.sync.current);
+  const external = client.db(syncItem.db).collection(syncItem.sync.external);
+  yield* $(
+    Stream.fromAsyncIterable(
+      external.watch([], { fullDocument: "updateLookup" }), //user
+      (e) => new MongoSyncError(getErrorMessage(e))
+    ),
+    Stream.flatMap((change) =>
+      Effect.gen(function* () {
+        const key = "sync." + syncItem.sync.path + "._id";
+        if (change.operationType === "update") {
+          yield* $(
+            Effect.log(
+              `${syncItem.sync.external} with id: ${change.documentKey._id} change update all references`
+            )
+          );
+          yield* $(
+            Effect.tryPromise(() =>
+              current.updateMany(
+                {
+                  [key]: change.documentKey._id,
+                },
+                {
+                  $set: {
+                    ["sync." + syncItem.sync.path]: change.fullDocument,
+                  },
+                }
+              )
+            )
+          );
+          return yield* $(Effect.unit);
+        } else {
+          return yield* $(Effect.unit);
+        }
+      }).pipe(Stream.fromEffect)
+    ),
+    Stream.runDrain
+  );
+});
+
+export const SyncCollection = Effect.all(
+  [SyncCurrentCollection, SyncExternalCollection],
+  { concurrency: "unbounded" }
+).pipe(
+  Effect.catchAll((e) => Effect.fail(new MongoSyncError(getErrorMessage(e))))
 );
-function handleUpdate(
-  client: MongoClient,
-  syncItem: SyncItem,
-  name: string,
-  change: ChangeStreamUpdateDocument<Document>
-) {
-  const replica = client.db(syncItem.db).collection(name);
-  const effect = Effect.tryPromise({
-    try: () =>
-      replica.updateOne(
-        {
-          _id: change.documentKey._id,
-        },
-        {
-          $set: change.updateDescription.updatedFields,
-        }
-      ),
-    catch(error) {
-      return new MongoSyncError(getErrorMessage(error));
-    },
-  });
-  return effect;
-}
-
-function handleInsert(
-  client: MongoClient,
-  syncItem: SyncItem,
-  name: string,
-  change: ChangeStreamInsertDocument<Document>
-) {
-  const replica = client.db(syncItem.db).collection(name);
-  const effect = Effect.tryPromise({
-    try: () => replica.insertOne(change.fullDocument),
-    catch(error) {
-      return new MongoSyncError(getErrorMessage(error));
-    },
-  });
-  return effect;
-}
-
-function handleDelete(
-  client: MongoClient,
-  syncItem: SyncItem,
-  name: string,
-  change: ChangeStreamDeleteDocument<Document>
-) {
-  const replica = client.db(syncItem.db).collection(name);
-  const effect = Effect.tryPromise({
-    try: () => replica.deleteOne(change.documentKey._id),
-    catch(error) {
-      return new MongoSyncError(getErrorMessage(error));
-    },
-  });
-  return effect;
-}
