@@ -9,7 +9,6 @@ export interface SyncItem {
     path: string;
     external: string;
   };
-  fields: string[];
 }
 
 export const SyncItem = Context.Tag<SyncItem>();

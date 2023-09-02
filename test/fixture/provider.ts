@@ -25,6 +25,5 @@ export const SyncItemLiveTest = Effect.provideService(
       path: "lead",
       external: "leads",
     },
-    fields: ["name"],
   })
 );

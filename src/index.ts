@@ -27,7 +27,6 @@ const SyncItemLive = Effect.provideService(
       path: "lead",
       external: "leads",
     },
-    fields: ["name"],
   })
 );
 
