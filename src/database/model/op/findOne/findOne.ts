@@ -1,7 +1,7 @@
 import { Document, Filter, FindOptions } from "mongodb";
-import { GetModel } from "../model";
+import { GetModel } from "../../model";
 import { Effect, Option } from "effect";
-import { DbConnectionError, SessionProvider } from "../../connection";
+import { DbConnectionError, SessionProvider } from "../../../connection";
 
 export const findOne = (filter: Filter<Document>, options?: FindOptions) =>
   Effect.gen(function* ($) {

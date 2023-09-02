@@ -2,10 +2,8 @@ import { Effect } from "effect";
 import { GetConnection, SessionProvider } from "../../../connection";
 import { DbOperation } from "../operations";
 import { getErrorMessage } from "../../../../utils";
+import { TransactionError } from "./transaction.error";
 
-export class TransactionError extends Error {
-  _tag = "TransactionError";
-}
 const catchError = (e: unknown) => new TransactionError(getErrorMessage(e));
 
 export const transaction = (operations: DbOperation[]) =>

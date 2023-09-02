@@ -1,6 +1,6 @@
 import { Document, ObjectId } from "mongodb";
 import { Effect, Option, Request, RequestResolver } from "effect";
-import { findOne } from "../findOne";
+import { findOne } from "../findOne/findOne";
 import { ModelProvider } from "../../model";
 import { DbConnectionError, DbProvider } from "../../../connection";
 

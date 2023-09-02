@@ -1,27 +1,10 @@
-import { Context, Effect, Stream } from "effect";
+import { Effect, Stream } from "effect";
 import { Document, Filter } from "mongodb";
 import { GetConnection } from "../../../connection";
 import { getErrorMessage } from "../../../../utils";
-
-interface Lookup {
-  from: string;
-  localField: string;
-  foreignField: string;
-  as: string;
-  match?: Filter<Document>;
-}
-
-export interface LookupProvider {
-  db: string;
-  collection: string;
-  lookups: Lookup[];
-}
-
-export const LookupProvider = Context.Tag<LookupProvider>();
-
-export class LookupError extends Error {
-  _tag = "LookupError";
-}
+import { LookupError } from "./lookup.error";
+import { LookupProvider } from "./lookup.context";
+import { Lookup } from "./lookup.interface";
 
 const catchError = (e: unknown) => new LookupError(getErrorMessage(e));
 

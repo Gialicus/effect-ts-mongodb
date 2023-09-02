@@ -3,7 +3,7 @@ import { transaction } from "../../src/database/model/op/transaction/transaction
 import {
   MongoInsertError,
   insertOne,
-} from "../../src/database/model/op/insertOne";
+} from "../../src/database/model/op/insertOne/insertOne";
 import { Effect } from "effect";
 import { DbLiveTest, ModelLiveTest } from "../fixture/provider";
 import { CloseConnection } from "../../src/database/connection";

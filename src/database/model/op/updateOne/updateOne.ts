@@ -1,12 +1,9 @@
 import { Effect, Option } from "effect";
-import { GetModel } from "../model";
+import { GetModel } from "../../model";
 import { Filter, Document, UpdateFilter, UpdateOptions } from "mongodb";
-import { getErrorMessage } from "../../../utils";
-import { SessionProvider } from "../../connection";
-
-export class MongoUpdateError extends Error {
-  _tag = "MongoUpdateError";
-}
+import { getErrorMessage } from "../../../../utils";
+import { SessionProvider } from "../../../connection";
+import { MongoUpdateError } from "./updateOne.error";
 
 export const updateOne = (
   filter: Filter<Document>,

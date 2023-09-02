@@ -1,12 +1,9 @@
 import { Effect, Option } from "effect";
-import { GetModel } from "../model";
+import { GetModel } from "../../model";
 import { Filter, Document, DeleteOptions } from "mongodb";
-import { getErrorMessage } from "../../../utils";
-import { SessionProvider } from "../../connection";
-
-export class MongoDeleteError extends Error {
-  _tag = "MongoDeleteError";
-}
+import { getErrorMessage } from "../../../../utils";
+import { SessionProvider } from "../../../connection";
+import { MongoDeleteError } from "./deleteOne.error";
 
 export const deleteOne = (filter: Filter<Document>, options?: DeleteOptions) =>
   Effect.gen(function* ($) {

@@ -2,7 +2,6 @@ import { Effect } from "effect/Effect";
 import { Option } from "effect/Option";
 import { DbProvider, DbConnectionError } from "../../connection";
 import { ModelProvider } from "../model";
-import { MongoFindStreamError } from "./find";
 import { Chunk } from "effect/Chunk";
 import {
   DeleteResult,
@@ -11,8 +10,9 @@ import {
   WithId,
   Document,
 } from "mongodb";
-import { MongoDeleteError } from "./deleteOne";
-import { MongoInsertError } from "./insertOne";
+import { MongoFindStreamError } from "./find/find.error";
+import { MongoDeleteError } from "./deleteOne/deleteOne.error";
+import { MongoInsertError } from "./insertOne/insertOne.error";
 
 type FindOne = Effect<
   DbProvider | ModelProvider,

@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { transaction } from "../../src/database/model/op/transaction/transaction";
-import { insertOne } from "../../src/database/model/op/insertOne";
+import { insertOne } from "../../src/database/model/op/insertOne/insertOne";
 import { ObjectId } from "bson";
 import { DbLiveTest, ModelLiveTest } from "../fixture/provider";
 import { Chunk, Effect, Option } from "effect";

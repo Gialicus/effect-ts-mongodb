@@ -2,7 +2,7 @@ import { Chunk, Effect, Request, RequestResolver } from "effect";
 import { DbConnectionError, DbProvider } from "../../../connection";
 import { ObjectIdParseError } from "./getOne";
 import { Document, ObjectId } from "bson";
-import { find } from "../find";
+import { find } from "../find/find";
 import { ModelProvider } from "../../model";
 import { WithId } from "mongodb";
 

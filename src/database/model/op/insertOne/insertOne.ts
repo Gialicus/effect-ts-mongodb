@@ -1,12 +1,9 @@
 import { Effect, Option } from "effect";
-import { GetModel } from "../model";
+import { GetModel } from "../../model";
 import { Document, InsertOneOptions, OptionalId } from "mongodb";
-import { getErrorMessage } from "../../../utils";
-import { SessionProvider } from "../../connection";
-
-export class MongoInsertError extends Error {
-  _tag = "MongoInsertError";
-}
+import { getErrorMessage } from "../../../../utils";
+import { SessionProvider } from "../../../connection";
+import { MongoInsertError } from "./insertOne.error";
 
 export const insertOne = (
   doc: OptionalId<Document>,

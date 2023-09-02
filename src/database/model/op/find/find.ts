@@ -1,12 +1,9 @@
 import { Document, Filter, FindOptions } from "mongodb";
-import { GetModel } from "../model";
+import { GetModel } from "../../model";
 import { Effect, Option, Stream } from "effect";
-import { getErrorMessage } from "../../../utils";
-import { SessionProvider } from "../../connection";
-
-export class MongoFindStreamError extends Error {
-  _tag = "MongoFindStreamError" as const;
-}
+import { getErrorMessage } from "../../../../utils";
+import { SessionProvider } from "../../../connection";
+import { MongoFindStreamError } from "./find.error";
 
 export const find = (
   filter: Filter<Document>,

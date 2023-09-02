@@ -1,6 +1,6 @@
 import { Chunk, Effect } from "effect";
 import { it, expect, afterAll } from "vitest";
-import { find } from "../../src/database/model/op/find";
+import { find } from "../../src/database/model/op/find/find";
 import { describe } from "node:test";
 import { DbLiveTest, ModelLiveTest } from "../fixture/provider";
 import { CloseConnection } from "../../src/database/connection";
