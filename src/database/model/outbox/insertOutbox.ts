@@ -37,7 +37,12 @@ export const insertOutbox = (data: OptionalId<Document>, payload = data) =>
       Effect.tryPromise({
         try: () =>
           outbox.insertOne(
-            { data: payload, processed: false, createdAt: new Date() },
+            {
+              data: payload,
+              processed: false,
+              createdAt: new Date(),
+              processedAt: null,
+            },
             { session }
           ),
         catch: (e) => new OutboxError(session, getErrorMessage(e)),
