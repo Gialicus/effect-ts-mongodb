@@ -25,6 +25,7 @@ export const find = (
       Stream.fromAsyncIterable(
         stream,
         (e) => new MongoFindStreamError(getErrorMessage(e))
-      ).pipe(Stream.runCollect)
+      ),
+      Stream.runCollect
     );
   });
