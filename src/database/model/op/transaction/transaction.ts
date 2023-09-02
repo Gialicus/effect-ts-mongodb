@@ -8,7 +8,7 @@ export class TransactionError extends Error {
 }
 const catchError = (e: unknown) => new TransactionError(getErrorMessage(e));
 
-export const trasaction = (operations: DbOperation[]) =>
+export const transaction = (operations: DbOperation[]) =>
   Effect.gen(function* ($) {
     const client = yield* $(GetConnection);
     const session = client.startSession();

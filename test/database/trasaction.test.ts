@@ -1,5 +1,5 @@
 import { describe, it, expect, afterAll } from "vitest";
-import { trasaction } from "../../src/database/model/op/transaction/trasaction";
+import { transaction } from "../../src/database/model/op/transaction/transaction";
 import {
   MongoInsertError,
   insertOne,
@@ -10,7 +10,7 @@ import { CloseConnection } from "../../src/database/connection";
 
 describe("trasaction", () => {
   it("should throw error", async () => {
-    const program = trasaction([
+    const program = transaction([
       insertOne({ name: "marioX", age: 30 }),
       insertOne({ name: "luigiX", age: 30 }),
       insertOne({ name: "luigiSecondoX", age: 30 }),
