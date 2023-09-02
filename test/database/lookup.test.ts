@@ -7,6 +7,7 @@ import { Chunk, Effect, Option } from "effect";
 import { ModelProvider } from "../../src/database/model/model";
 import {
   LookupProvider,
+  lookupFactory,
   lookupModel,
 } from "../../src/database/model/op/lookup/lookup";
 
@@ -67,5 +68,26 @@ describe("lookup", () => {
     } else {
       expect(false).toBe("Not user found");
     }
+  });
+
+  it("should create match pipeline", async () => {
+    const pipeline = lookupFactory([
+      {
+        from: "items",
+        localField: "_id",
+        foreignField: "user",
+        as: "items",
+        match: {
+          name: "spada laser",
+        },
+      },
+      {
+        from: "adresses",
+        localField: "_id",
+        foreignField: "contact",
+        as: "adresses",
+      },
+    ]);
+    expect(pipeline).toBeDefined();
   });
 });

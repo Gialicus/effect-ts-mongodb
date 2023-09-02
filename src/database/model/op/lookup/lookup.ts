@@ -8,6 +8,7 @@ interface Lookup {
   localField: string;
   foreignField: string;
   as: string;
+  match?: Filter<Document>;
 }
 
 export interface LookupProvider {
@@ -24,19 +25,45 @@ export class LookupError extends Error {
 
 const catchError = (e: unknown) => new LookupError(getErrorMessage(e));
 
+export const lookupFactory = (lookups: Lookup[]) =>
+  lookups
+    .map((value) => {
+      return [
+        {
+          $lookup: {
+            from: value.from,
+            localField: value.localField,
+            foreignField: value.foreignField,
+            as: value.as,
+          },
+        },
+        ...(value.match
+          ? [
+              {
+                $match: value.match,
+              },
+            ]
+          : []),
+        {
+          $unwind: "$" + value.as,
+        },
+      ];
+    })
+    .reduce((acc, cur) => [...acc, ...cur]);
+
 export const lookupModel = (filter: Filter<Document>) =>
   Effect.gen(function* ($) {
     const [client, lookup] = yield* $(
       Effect.all([GetConnection, LookupProvider])
     );
     const collection = client.db(lookup.db).collection(lookup.collection);
-    const stream = collection.aggregate([
+    const query = [
       {
         $match: filter,
       },
-      ...lookup.lookups.map((value) => ({ $lookup: value })),
-      ...lookup.lookups.map((value) => ({ $unwind: "$" + value.as })),
-    ]);
+      ...lookupFactory(lookup.lookups),
+    ];
+    const stream = collection.aggregate(query);
     return yield* $(
       Stream.fromAsyncIterable(stream, catchError),
       Stream.runCollect
