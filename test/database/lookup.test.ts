@@ -3,7 +3,7 @@ import { transaction } from "../../src/database/model/op/transaction/transaction
 import { insertOne } from "../../src/database/model/op/insertOne";
 import { ObjectId } from "bson";
 import { DbLiveTest, ModelLiveTest } from "../fixture/provider";
-import { Chunk, Effect } from "effect";
+import { Chunk, Effect, Option } from "effect";
 import { ModelProvider } from "../../src/database/model/model";
 import {
   LookupProvider,
@@ -60,6 +60,12 @@ describe("lookup", () => {
         )
       )
     );
-    expect(Chunk.isNonEmpty(result)).toBe(true);
+    const user = Chunk.get(0)(result);
+    if (Option.isSome(user)) {
+      expect(user.value.items).toBeDefined();
+      expect(user.value.adresses).toBeDefined();
+    } else {
+      expect(false).toBe("Not user found");
+    }
   });
 });

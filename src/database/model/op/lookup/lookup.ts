@@ -35,6 +35,7 @@ export const lookupModel = (filter: Filter<Document>) =>
         $match: filter,
       },
       ...lookup.lookups.map((value) => ({ $lookup: value })),
+      ...lookup.lookups.map((value) => ({ $unwind: "$" + value.as })),
     ]);
     return yield* $(
       Stream.fromAsyncIterable(stream, catchError),
