@@ -48,36 +48,47 @@ export const insertOutbox = (data: OptionalId<Document>, payload = data) =>
         catch: (e) => new OutboxError(session, getErrorMessage(e)),
       })
     );
-    yield* $(
-      Effect.tryPromise({
-        try: () => session.commitTransaction(),
-        catch: (e) => new OutboxError(session, getErrorMessage(e)),
-      })
-    );
-    yield* $(
-      Effect.tryPromise({
-        try: () => session.endSession(),
-        catch: (e) => new OutboxError(session, getErrorMessage(e)),
-      })
-    );
+    yield* $(commit(session));
+    yield* $(end(session));
     return Chunk.fromIterable([resultMain.insertedId, resultOutbox.insertedId]);
   }).pipe(
     Effect.catchAll((e) =>
-      Effect.tryPromise({
-        try: () => e.session.abortTransaction(),
-        catch(error) {
-          return new OutboxError(e.session, getErrorMessage(error));
-        },
-      }).pipe(
-        Effect.tap(() =>
-          Effect.tryPromise({
-            try: () => e.session.endSession(),
-            catch(error) {
-              return new OutboxError(e.session, getErrorMessage(error));
-            },
-          })
-        ),
+      abort(e).pipe(
+        Effect.tap(() => endWithError(e)),
         Effect.map(() => Chunk.empty<ObjectId>())
       )
     )
   );
+
+function endWithError(e: OutboxError): Effect.Effect<never, OutboxError, void> {
+  return Effect.tryPromise({
+    try: () => e.session.endSession(),
+    catch(error) {
+      return new OutboxError(e.session, getErrorMessage(error));
+    },
+  });
+}
+
+function end(session: ClientSession): Effect.Effect<never, OutboxError, void> {
+  return Effect.tryPromise({
+    try: () => session.endSession(),
+    catch: (e) => new OutboxError(session, getErrorMessage(e)),
+  });
+}
+
+function commit(
+  session: ClientSession
+): Effect.Effect<never, OutboxError, Document> {
+  return Effect.tryPromise({
+    try: () => session.commitTransaction(),
+    catch: (e) => new OutboxError(session, getErrorMessage(e)),
+  });
+}
+function abort(e: OutboxError): Effect.Effect<never, OutboxError, Document> {
+  return Effect.tryPromise({
+    try: () => e.session.abortTransaction(),
+    catch(error) {
+      return new OutboxError(e.session, getErrorMessage(error));
+    },
+  });
+}
